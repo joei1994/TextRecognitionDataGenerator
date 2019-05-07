@@ -12,7 +12,7 @@ def generate(text, font, text_color, font_size, orientation, space_width, fit):
 
 def _generate_horizontal_text(text, font, text_color, font_size, space_width, fit):
     font = "fonts/th/sarun.ttf"
-    print(f"DEBUG : {font}")
+    #print(f"DEBUG : {font}")
     
     image_font = ImageFont.truetype(font=font, size=font_size)
     words = text.split(' ')

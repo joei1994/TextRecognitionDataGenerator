@@ -28,7 +28,6 @@ def create_strings_from_dict(length, allow_variable, count, lang_dict):
     """
         Create all strings by picking X random word in the dictionnary
     """
-
     dict_len = len(lang_dict)
     strings = []
     for _ in range(0, count):
@@ -38,6 +37,27 @@ def create_strings_from_dict(length, allow_variable, count, lang_dict):
             current_string += ' '
         strings.append(current_string[:-1])
     return strings
+
+def create_strings_dict(count, lang_dict = None):
+    strings_dict = {}
+    if lang_dict != None:
+        for vocab in lang_dict:
+            current_string = ""
+            current_string += vocab[:-1]
+            current_string += ' '
+        
+            strings_dict[current_string] = [current_string[:-1]] * count  
+        return strings_dict
+
+    else:
+        char_list = [chr(x) for x in range(ord('ก'), ord('ฮ') + 1)]
+        digit_list = [chr(x) for x in range(ord('0'), ord('9') + 1)]
+        char_list = char_list + digit_list
+
+        for c in char_list:
+            strings_dict[c] = list(c * count)
+        
+        return strings_dict    
 
 def create_strings_from_wikipedia(minimum_length, count, lang):
     """
