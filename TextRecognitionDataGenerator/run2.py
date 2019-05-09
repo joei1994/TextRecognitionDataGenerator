@@ -4,6 +4,7 @@ import random
 import string
 import pdb
 
+
 from tqdm import tqdm
 from string_generator import (
     create_strings_from_dict,
@@ -332,33 +333,33 @@ def main():
     is_provinces = True
 
     # Start generating
-    for k, strings in strings_dict.items():
-        # Create Directory for each vocab in dict  
+    for i, (k, strings) in enumerate(strings_dict.items()):
 
+        # Create Directory for each vocab in dict
+                        
         for height in [300, 200, 100, 50, 25]:
-
             if height == 25:
                 blur = 0
                 skew = 5
-                width = 100 if is_provinces else height
+                width = 300 if is_provinces else height
             elif height == 50:
                 blur = 1
                 skew = 6
-                width = 250 if is_provinces else height
+                width = 500 if is_provinces else height
             elif height == 100:
                 blur = 4
                 skew = 10 
-                width = 700 if is_provinces else height
+                width = 900 if is_provinces else height
             elif height == 200:
                 blur = 6
                 skew = 12 
-                width = 1200 if is_provinces else height
+                width = 1700 if is_provinces else height
             else:
                 blur = 10
                 skew = 15  
-                width = 1800 if is_provinces else height
+                width = 2500 if is_provinces else height
             
-            output_path = args.output_dir + f'{k}/{height}x{width}/'
+            output_path = args.output_dir + f'{k}/v0/{height}x{width}/'
 
             try:
                 os.makedirs(output_path)
