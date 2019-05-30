@@ -1,11 +1,13 @@
 import os
 import random
+import math
 
-from PIL import Image, ImageFilter
+from PIL import Image, ImageFilter, ImageDraw
 
 import computer_text_generator
 import background_generator
 import distorsion_generator
+import xml_util
 try:
     import handwritten_text_generator
 except ImportError as e:
@@ -37,11 +39,11 @@ class FakeTextDataGenerator(object):
                 raise ValueError("Vertical handwritten text is unavailable")
             image = handwritten_text_generator.generate(text, text_color, fit)
         else:
-            image = computer_text_generator.generate(text, font, text_color, size, orientation, space_width, fit)
-
+            image, coords, chars = computer_text_generator.generate(text, font, text_color, size, orientation, space_width, fit)
         random_angle = random.randint(0-skewing_angle, skewing_angle)
-
-        rotated_img = image.rotate(skewing_angle if not random_skew else random_angle, expand=1)
+        skewing_angle = skewing_angle if not random_skew else random_angle
+        #skewing_angle = -skewing_angle
+        rotated_img = image.rotate(skewing_angle, expand=1)
 
         #############################
         # Apply distorsion to image #
@@ -111,6 +113,60 @@ class FakeTextDataGenerator(object):
         else:
             background.paste(resized_img, (background_width - new_text_width - margin_right, margin_top), resized_img)
 
+
+        # Calculate bounding box after resize and rotate
+        new_coords = []
+
+        w_percentage = resized_img.size[0] / distorted_img.size[0]
+        h_percentage = resized_img.size[1] / distorted_img.size[1]
+
+        for coord in coords:
+            xmin = coord[0][0]
+            ymin = coord[0][1]
+            xmax = coord[1][0]
+            ymax = coord[1][1]
+
+            xmin = xmin * w_percentage
+            ymin = ymin * h_percentage
+            xmax = xmax * w_percentage
+            ymax = ymax * h_percentage
+
+            oh = resized_img.size[1]/ 2 
+            ow = resized_img.size[0]/ 2
+            if skewing_angle > 0: 
+                origin = ow + .45 * resized_img.size[0], oh - .45 * resized_img.size[1]
+            elif skewing_angle < 0:
+                 origin = ow - .45 * resized_img.size[0], oh + .45 * resized_img.size[1]   
+            else:
+                origin = oh, ow     
+
+            angel =  -math.radians(skewing_angle) 
+
+            x1, y1 = rotate_point(origin, (xmin, ymin), angel)
+            x2, y2 = rotate_point(origin, (xmin, ymax), angel)
+            x3, y3 = rotate_point(origin, (xmax, ymax), angel)
+            x4, y4 = rotate_point(origin, (xmax, ymin), angel)
+
+            xmin = min([x1, x2, x3, x4])
+            ymin = min([y1, y2, y3, y4])
+            xmax = max([x1, x2, x3, x4])
+            ymax = max([y1, y2, y3, y4])
+
+            if skewing_angle > 0:
+                xmax = xmax + .5*angel*(xmax-xmin)
+                ymax = ymax - .5*angel*(ymax-ymin)
+            elif skewing_angle < 0:
+                xmin = xmin - .5*angel*(xmax-xmin)
+                xmax = xmax - 1.3*angel*(xmax-xmin)
+                ymin = ymin + .3*angel*(ymax-ymin)
+
+            #adjust to margins
+            xmin, ymin, xmax, ymax = xmin + margin_left, ymin + margin_top, xmax + margin_left, ymax + margin_top
+
+            new_coords.append([(xmin, ymin), (xmax, ymax)])
+            drawer = ImageDraw.Draw(background)
+            drawer.line([(xmin, ymin), (xmin, ymax), (xmax, ymax), (xmax, ymin), (xmin, ymin)], fill = (0, 255, 0), width=1)    
+
         ##################################
         # Apply gaussian blur #
         ##################################
@@ -134,5 +190,26 @@ class FakeTextDataGenerator(object):
             print('{} is not a valid name format. Using default.'.format(name_format))
             image_name = '{}_{}.{}'.format(text, str(index), extension)
 
+        
+        #write xml 
+        xml_util.generate_xml(image_name.split('.')[0], final_image.size, new_coords, chars, out_dir)    
+
         # Save the image
         final_image.convert('RGB').save(os.path.join(out_dir, image_name))
+
+        
+    
+def rotate_point(origin, point, angle):
+    """
+    Rotate a point counterclockwise by a given angle around a given origin.
+
+    The angle should be given in radians.
+    """
+    ox, oy = origin
+    px, py = point
+
+    qx = ox + math.cos(angle) * (px - ox) - math.sin(angle) * (py - oy)
+    qy = oy + math.sin(angle) * (px - ox) + math.cos(angle) * (py - oy)
+    return qx, qy
+
+    

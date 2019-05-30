@@ -1,4 +1,5 @@
 import random
+import numpy as np
 
 from PIL import Image, ImageColor, ImageFont, ImageDraw, ImageFilter
 
@@ -12,14 +13,16 @@ def generate(text, font, text_color, font_size, orientation, space_width, fit):
 
 def _generate_horizontal_text(text, font, text_color, font_size, space_width, fit):
     font = "fonts/th/sarun.ttf"
-    #print(f"DEBUG : {font}")
-    
     image_font = ImageFont.truetype(font=font, size=font_size)
-    words = text.split(' ')
-    space_width = image_font.getsize(' ')[0] * space_width
 
-    words_width = [image_font.getsize(w)[0] for w in words]
-    text_width =  sum(words_width) + int(space_width) * (len(words) - 1)
+    words = text.split(' ')
+    chars = [char for word in words for char in word]
+
+    word_spacing = image_font.getsize(' ')[0] * space_width
+    letter_spacing  = word_spacing * .3
+
+    flatten_chars_width = [image_font.getsize(ch)[0]  for ch in chars]
+    text_width =  sum(flatten_chars_width) + int(word_spacing) * (len(words) - 1)  + int(letter_spacing) * (len(chars) - (len(words)))
     text_height = max([image_font.getsize(w)[1] for w in words])
 
     txt_img = Image.new('RGBA', (text_width, text_height), (0, 0, 0, 0))
@@ -35,13 +38,45 @@ def _generate_horizontal_text(text, font, text_color, font_size, space_width, fi
         random.randint(min(c1[2], c2[2]), max(c1[2], c2[2]))
     )
 
-    for i, w in enumerate(words):
-        txt_draw.text((sum(words_width[0:i]) + i * int(space_width), 0), w, fill=fill, font=image_font)
+    coords = []
+    chars = []
+
+    for i, word in enumerate(words):  
+        for j, ch in enumerate(word):
+            n_char_before = sum([len(word) for word in words[:i]]) + j
+            n_space_before = i
+            xmin = (
+                sum([char_width for char_width in flatten_chars_width[:n_char_before]]) +
+                n_space_before * int(word_spacing) + 
+                sum([len(word)-1 for word in words[:i]]) * letter_spacing + 
+                j * letter_spacing
+            )
+
+            ymin = -(.45 * font_size)
+            txt_draw.text((xmin, ymin), ch, fill=fill, font=image_font)
+
+            #define xmax, ymax
+            xmax = xmin + image_font.getsize(ch)[0]
+            ymax = ymin + image_font.getsize(ch)[1]
+
+            #reduce char height caused by font effect
+            ymin = ymin + .75 * ymax
+
+            #add margins to each side of char
+            percentage_margin = 0.01
+            xmin = xmin - percentage_margin * xmax
+            xmax = xmax + percentage_margin * xmax
+            ymin = ymin - percentage_margin * ymax
+            ymax = ymax + percentage_margin * ymax
+
+            coords.append([(xmin, ymin), (xmax, ymax)])
+            chars.append(ch)
+            #txt_draw.line([(xmin, ymin), (xmin, ymax), (xmax, ymax), (xmax, ymin), (xmin, ymin)], fill = (255, 0, 0), width=2)
 
     if fit:
-        return txt_img.crop(txt_img.getbbox())
+        return txt_img.crop(txt_img.getbbox()), coords
     else:
-        return txt_img
+        return txt_img, coords, chars
 
 def _generate_vertical_text(text, font, text_color, font_size, space_width, fit):
     font = "fonts/th/sarun.ttf"
