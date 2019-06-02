@@ -100,4 +100,8 @@ ENV/
 # mypy
 .mypy_cache/
 .DS_Store
-/TextRecognitionDataGenerator
+/TextRecognitionDataGenerator/dicts/th.txt
+/TextRecognitionDataGenerator/out
+/TextRecognitionDataGenerator/pictures
+/TextRecognitionDataGenerator/texts
+*.ipynb
