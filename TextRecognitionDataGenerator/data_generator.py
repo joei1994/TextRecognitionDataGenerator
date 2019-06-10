@@ -165,7 +165,9 @@ class FakeTextDataGenerator(object):
 
             new_coords.append([(xmin, ymin), (xmax, ymax)])
             drawer = ImageDraw.Draw(background)
-            drawer.line([(xmin, ymin), (xmin, ymax), (xmax, ymax), (xmax, ymin), (xmin, ymin)], fill = (0, 255, 0), width=1)    
+            #drawer.line([(xmin, ymin), (xmin, ymax), (xmax, ymax), (xmax, ymin), (xmin, ymin)], fill = (0, 255, 0), width=1) 
+            #x1, y1, x2, y2 = 0, 0, background.size[0], background.size[1]
+            #drawer.line([(x1, y1), (x1, y2), (x2, y2), (x2, y1), (x1, y1)], fill = (0, 0, 255), width=1)    
 
         ##################################
         # Apply gaussian blur #
