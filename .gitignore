@@ -100,7 +100,7 @@ ENV/
 # mypy
 .mypy_cache/
 .DS_Store
-/TextRecognitionDataGenerator/dicts/th.txt
+/TextRecognitionDataGenerator/dicts
 /TextRecognitionDataGenerator/out
 /TextRecognitionDataGenerator/pictures
 /TextRecognitionDataGenerator/texts

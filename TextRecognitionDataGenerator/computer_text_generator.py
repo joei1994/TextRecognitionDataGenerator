@@ -26,7 +26,6 @@ def _generate_horizontal_text(text, font, text_color, font_size, space_width, fi
     text_height = max([image_font.getsize(w)[1] for w in words])
 
     txt_img = Image.new('RGBA', (text_width, text_height), (0, 0, 0, 0))
-
     txt_draw = ImageDraw.Draw(txt_img)
 
     colors = [ImageColor.getrgb(c) for c in text_color.split(',')]
@@ -38,7 +37,7 @@ def _generate_horizontal_text(text, font, text_color, font_size, space_width, fi
         random.randint(min(c1[2], c2[2]), max(c1[2], c2[2]))
     )
 
-    coords = []
+    char_bboxes = []
     chars = []
 
     for i, word in enumerate(words):  
@@ -69,14 +68,13 @@ def _generate_horizontal_text(text, font, text_color, font_size, space_width, fi
             ymin = ymin - percentage_margin * ymax
             ymax = ymax + percentage_margin * ymax
 
-            coords.append([(xmin, ymin), (xmax, ymax)])
+            char_bboxes.append([(xmin, ymin), (xmax, ymax)])
             chars.append(ch)
-            #txt_draw.line([(xmin, ymin), (xmin, ymax), (xmax, ymax), (xmax, ymin), (xmin, ymin)], fill = (255, 0, 0), width=2)
 
     if fit:
-        return txt_img.crop(txt_img.getbbox()), coords
+        return txt_img.crop(txt_img.getbbox()), char_bboxes, chars
     else:
-        return txt_img, coords, chars
+        return txt_img, char_bboxes, chars
 
 def _generate_vertical_text(text, font, text_color, font_size, space_width, fit):
     font = "fonts/th/sarun.ttf"

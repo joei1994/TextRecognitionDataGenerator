@@ -242,7 +242,7 @@ def parse_arguments():
         "--margins",
         type=margins,
         nargs="?",
-        help="Define the margins around the text when rendered. In pixels",
+        help="Define the margins around the text when rendered. In pixels, TOP/RIGHT/BOTTOM/LEFT",
         default=(5, 5, 5, 5)
     )
     parser.add_argument(
