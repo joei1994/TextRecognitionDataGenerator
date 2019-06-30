@@ -54,7 +54,7 @@ def parse_arguments():
         type=int,
         nargs="?",
         help="The number of images to be created.",
-        default=1000
+        default=1
     )
     parser.add_argument(
         "-rs",
@@ -243,7 +243,7 @@ def parse_arguments():
         type=margins,
         nargs="?",
         help="Define the margins around the text when rendered. In pixels, TOP/RIGHT/BOTTOM/LEFT",
-        default=(5, 5, 5, 5)
+        default=(20, 45, 5, 45)
     )
     parser.add_argument(
         "-fi",
