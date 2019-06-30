@@ -44,22 +44,22 @@ def _generate_horizontal_text(text, font, text_color, font_size, space_width, fi
         for j, ch in enumerate(word):
             n_char_before = sum([len(word) for word in words[:i]]) + j
             n_space_before = i
+
+            #define xmin, ymin, xmax, ymax
             xmin = (
                 sum([char_width for char_width in flatten_chars_width[:n_char_before]]) +
                 n_space_before * int(word_spacing) + 
                 sum([len(word)-1 for word in words[:i]]) * letter_spacing + 
                 j * letter_spacing
             )
-
-            ymin = -(.45 * font_size)
+            ymin = -(.80 * font_size)    
             txt_draw.text((xmin, ymin), ch, fill=fill, font=image_font)
 
-            #define xmax, ymax
             xmax = xmin + image_font.getsize(ch)[0]
             ymax = ymin + image_font.getsize(ch)[1]
 
             #reduce char height caused by font effect
-            ymin = ymin + .75 * ymax
+            ymin = ymin + .55 * image_font.getsize(ch)[1]
 
             #add margins to each side of char
             percentage_margin = 0.01
