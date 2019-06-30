@@ -1,5 +1,8 @@
 import random
 import numpy as np
+import os
+from pdb import set_trace
+from random import choice
 
 from PIL import Image, ImageColor, ImageFont, ImageDraw, ImageFilter
 
@@ -40,6 +43,7 @@ def _generate_horizontal_text(text, font, text_color, font_size, space_width, fi
     char_bboxes = []
     chars = []
 
+    # Draw each characters
     for i, word in enumerate(words):  
         for j, ch in enumerate(word):
             n_char_before = sum([len(word) for word in words[:i]]) + j
@@ -53,8 +57,10 @@ def _generate_horizontal_text(text, font, text_color, font_size, space_width, fi
                 j * letter_spacing
             )
             ymin = -(.80 * font_size)    
+            # draw ch
             txt_draw.text((xmin, ymin), ch, fill=fill, font=image_font)
 
+            # detemine bbox
             xmax = xmin + image_font.getsize(ch)[0]
             ymax = ymin + image_font.getsize(ch)[1]
 
@@ -62,19 +68,33 @@ def _generate_horizontal_text(text, font, text_color, font_size, space_width, fi
             ymin = ymin + .55 * image_font.getsize(ch)[1]
 
             #add margins to each side of char
-            percentage_margin = 0.01
-            xmin = xmin - percentage_margin * xmax
-            xmax = xmax + percentage_margin * xmax
-            ymin = ymin - percentage_margin * ymax
-            ymax = ymax + percentage_margin * ymax
+            x_margin_percentage = 0.07
+            y_margin_percentage = 0.09
+            xmin = xmin - x_margin_percentage * (xmax - xmin)
+            xmax = xmax + x_margin_percentage * (xmax - xmin)
+            ymin = ymin - y_margin_percentage * (ymax - ymin)
+            ymax = ymax + y_margin_percentage * (ymax - ymin)
 
             char_bboxes.append([(xmin, ymin), (xmax, ymax)])
             chars.append(ch)
 
+    # Draw Province
+    with open(os.path.join('dicts', 'provinces.txt'), 'r', encoding='utf-8', errors='ignore') as fid:
+        provinces = [province.strip() for province in fid.readlines()]
+        province_text = choice(provinces)
+
+        province_font = ImageFont.truetype(font=font, size=int(font_size * .4))
+        province_text_width, province_text_height = province_font.getsize(province_text)
+        province_xmin = txt_img.size[0] / 2 - (province_text_width / 2)
+        province_ymin = txt_img.size[1] - (province_text_height) - 10
+        txt_draw.text((province_xmin, province_ymin), province_text, fill=fill, font=province_font)
+        province_xmax = province_xmin + province_text_width
+        province_ymax = province_ymin + province_text_height
+
     if fit:
-        return txt_img.crop(txt_img.getbbox()), char_bboxes, chars
+        return txt_img.crop(txt_img.getbbox()), char_bboxes, chars, [(province_xmin, province_ymin), (province_xmax,province_ymax)], province_text
     else:
-        return txt_img, char_bboxes, chars
+        return txt_img, char_bboxes, chars, [(province_xmin, province_ymin), (province_xmax,province_ymax)], province_text
 
 def _generate_vertical_text(text, font, text_color, font_size, space_width, fit):
     font = "fonts/th/sarun.ttf"

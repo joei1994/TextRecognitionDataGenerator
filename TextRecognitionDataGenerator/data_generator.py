@@ -39,7 +39,7 @@ class FakeTextDataGenerator(object):
                 raise ValueError("Vertical handwritten text is unavailable")
             image = handwritten_text_generator.generate(text, text_color, fit)
         else:
-            image, bboxes, chars = computer_text_generator.generate(text, font, text_color, size, orientation, space_width, fit)
+            image, char_bboxes, chars,province_bbox, province_text = computer_text_generator.generate(text, font, text_color, size, orientation, space_width, fit)
         random_angle = random.randint(0-skewing_angle, skewing_angle)
         skewing_angle = skewing_angle if not random_skew else random_angle
         rotated_img = image.rotate(skewing_angle, expand=1)
@@ -112,34 +112,43 @@ class FakeTextDataGenerator(object):
         else:
             background.paste(resized_img, (background_width - new_text_width - margin_right, margin_top), resized_img)
 
-        #####################################################
-        # Transform bounding box after resize and rotate #
-        #####################################################=
-        new_bboxes = []
+        #######################################################
+        # Transform bounding boxes after resize and rotate #
+        #######################################################
+        new_char_bboxes = []
 
         w_ratio = resized_img.size[0] / distorted_img.size[0]
         h_ratio = resized_img.size[1] / distorted_img.size[1]
-
-        for bbox in bboxes:
+        # adjust char bboxes
+        for bbox in char_bboxes:
             # adjust to resize
-            new_bbox = adjust_bbox_to_resize(bbox, w_ratio, h_ratio)
-            #bbox_after_resize  = new_bbox
-
+            bbox = adjust_bbox_to_resize(bbox, w_ratio, h_ratio)
+            
             # adjust to rotate
-            new_bbox = adjust_bbox_to_rotate(new_bbox, skewing_angle, resized_img)
+            bbox = adjust_bbox_to_rotate(bbox, skewing_angle, resized_img)
 
             #adjust to margins
-            xmin, ymin, xmax, ymax = extract_box(new_bbox)
+            xmin, ymin, xmax, ymax = extract_box(bbox)
             xmin, ymin, xmax, ymax = xmin + margin_left, ymin + margin_top, xmax + margin_left, ymax + margin_top
 
-            new_bboxes.append([(xmin, ymin), (xmax, ymax)])
-            #drawer = ImageDraw.Draw(background)
-            #drawer.line([(xmin, ymin), (xmin, ymax), (xmax, ymax), (xmax, ymin), (xmin, ymin)], fill = (0, 255, 0), width=1) 
-            #drawer.line([(bbox_after_resize[0][0], bbox_after_resize[0][1]), (bbox_after_resize[0][0], bbox_after_resize[1][1]), (bbox_after_resize[1][0], bbox_after_resize[1][1]), (bbox_after_resize[1][0], bbox_after_resize[0][1]), (bbox_after_resize[0][0], bbox_after_resize[0][1])], fill = (255, 0, 0), width=1) 
+            new_char_bboxes.append([(xmin, ymin), (xmax, ymax)])
+            drawer = ImageDraw.Draw(background)
+            drawer.line([(xmin, ymin), (xmin, ymax), (xmax, ymax), (xmax, ymin), (xmin, ymin)], fill = (0, 255, 0), width=1) 
+
+        # adjust province bbox
+        province_bbox = adjust_bbox_to_resize(province_bbox, w_ratio, h_ratio)
+
+        #adjust to margins
+        xmin, ymin, xmax, ymax = extract_box(province_bbox)
+        xmin, ymin, xmax, ymax = xmin + margin_left, ymin + margin_top, xmax + margin_left, ymax + margin_top
+        province_bbox = [(xmin, ymin), (xmax, ymax)]
+
+        drawer.line([(xmin, ymin), (xmin, ymax), (xmax, ymax), (xmax, ymin), (xmin, ymin)], fill = (0, 255, 0), width=1) 
+
         
-        ##################################
+        #######################
         # Apply gaussian blur #
-        ##################################
+        #######################
 
         final_image = background.filter(
             ImageFilter.GaussianBlur(
@@ -162,7 +171,7 @@ class FakeTextDataGenerator(object):
 
         
         #write xml 
-        xml_util.generate_xml(image_name.split('.')[0], final_image.size, new_bboxes, chars, out_dir)    
+        xml_util.generate_xml(image_name.split('.')[0], final_image.size, new_char_bboxes, chars, out_dir)    
 
         # Save the image
         final_image.convert('RGB').save(os.path.join(out_dir, image_name))
