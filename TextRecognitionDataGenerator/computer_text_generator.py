@@ -57,44 +57,60 @@ def _generate_horizontal_text(text, font, text_color, font_size, space_width, fi
                 j * letter_spacing
             )
             ymin = -(.80 * font_size)    
-            # draw ch
+            # draw char
             txt_draw.text((xmin, ymin), ch, fill=fill, font=image_font)
-
-            # detemine bbox
-            xmax = xmin + image_font.getsize(ch)[0]
-            ymax = ymin + image_font.getsize(ch)[1]
-
-            #reduce char height caused by font effect
-            ymin = ymin + .55 * image_font.getsize(ch)[1]
-
-            #add margins to each side of char
-            x_margin_percentage = 0.07
-            y_margin_percentage = 0.09
-            xmin = xmin - x_margin_percentage * (xmax - xmin)
-            xmax = xmax + x_margin_percentage * (xmax - xmin)
-            ymin = ymin - y_margin_percentage * (ymax - ymin)
-            ymax = ymax + y_margin_percentage * (ymax - ymin)
-
-            char_bboxes.append([(xmin, ymin), (xmax, ymax)])
+            # detemine char bbox
+            bbox = generate_bounding_box_for_text(
+                ch, 
+                image_font, 
+                xmin, 
+                ymin, 
+                x_margin_percentage=0.07, y_margin_percentage=0.09, lower_ymin_percentage=.55)
+            char_bboxes.append(bbox)
             chars.append(ch)
 
     # Draw Province
     with open(os.path.join('dicts', 'provinces.txt'), 'r', encoding='utf-8', errors='ignore') as fid:
+        # Select province randomly
         provinces = [province.strip() for province in fid.readlines()]
         province_text = choice(provinces)
 
+        # Draw province
         province_font = ImageFont.truetype(font=font, size=int(font_size * .4))
         province_text_width, province_text_height = province_font.getsize(province_text)
         province_xmin = txt_img.size[0] / 2 - (province_text_width / 2)
-        province_ymin = txt_img.size[1] - (province_text_height) - 10
+        lift_up = 35
+        province_ymin = txt_img.size[1] - (province_text_height) - lift_up
         txt_draw.text((province_xmin, province_ymin), province_text, fill=fill, font=province_font)
-        province_xmax = province_xmin + province_text_width
-        province_ymax = province_ymin + province_text_height
+
+        # Determine province bbox
+        province_bbox = generate_bounding_box_for_text(
+             province_text,
+             province_font, 
+             province_xmin, 
+             province_ymin,
+             x_margin_percentage=0.05, y_margin_percentage=0.07, lower_ymin_percentage=.40)
 
     if fit:
-        return txt_img.crop(txt_img.getbbox()), char_bboxes, chars, [(province_xmin, province_ymin), (province_xmax,province_ymax)], province_text
+        return txt_img.crop(txt_img.getbbox()), char_bboxes, chars, province_bbox, province_text
     else:
-        return txt_img, char_bboxes, chars, [(province_xmin, province_ymin), (province_xmax,province_ymax)], province_text
+        return txt_img, char_bboxes, chars, province_bbox, province_text
+
+def generate_bounding_box_for_text(text, font, xmin, ymin, x_margin_percentage, y_margin_percentage, lower_ymin_percentage):
+    # detemine bbox
+    xmax = xmin + font.getsize(text)[0]
+    ymax = ymin + font.getsize(text)[1]
+
+    #reduce char height caused by font effect
+    ymin = ymin + lower_ymin_percentage * font.getsize(text)[1]
+
+    #add margins to each side of char bbox
+    xmin = xmin - x_margin_percentage * (xmax - xmin)
+    xmax = xmax + x_margin_percentage * (xmax - xmin)
+    ymin = ymin - y_margin_percentage * (ymax - ymin)
+    ymax = ymax + y_margin_percentage * (ymax - ymin)
+
+    return [(xmin, ymin), (xmax, ymax)]
 
 def _generate_vertical_text(text, font, text_color, font_size, space_width, fit):
     font = "fonts/th/sarun.ttf"
