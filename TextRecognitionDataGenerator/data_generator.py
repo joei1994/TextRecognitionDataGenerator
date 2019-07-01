@@ -24,7 +24,7 @@ class FakeTextDataGenerator(object):
         cls.generate(*t)
 
     @classmethod
-    def generate(cls, index, text, font, out_dir, size, extension, skewing_angle, random_skew, blur, random_blur, background_type, distorsion_type, distorsion_orientation, is_handwritten, name_format, width, alignment, text_color, orientation, space_width, margins, fit):
+    def generate(cls, index, text, font, out_dir, size, extension, skewing_angle, random_skew, blur, random_blur, background_type, distorsion_type, distorsion_orientation, is_handwritten, name_format, width, alignment, text_color, orientation, space_width, margins, fit, lpcolor):
         image = None
 
         margin_top, margin_left, margin_bottom, margin_right = margins
@@ -39,7 +39,7 @@ class FakeTextDataGenerator(object):
                 raise ValueError("Vertical handwritten text is unavailable")
             image = handwritten_text_generator.generate(text, text_color, fit)
         else:
-            image, char_bboxes, chars,province_bbox, province_text = computer_text_generator.generate(text, font, text_color, size, orientation, space_width, fit)
+            image, char_bboxes, chars, province_bbox, province_text = computer_text_generator.generate(text, font, text_color, size, orientation, space_width, fit)
         random_angle = random.randint(0-skewing_angle, skewing_angle)
         skewing_angle = skewing_angle if not random_skew else random_angle
         rotated_img = image.rotate(skewing_angle, expand=1)
@@ -96,8 +96,11 @@ class FakeTextDataGenerator(object):
             background = background_generator.plain_white(background_height, background_width)
         elif background_type == 2:
             background = background_generator.quasicrystal(background_height, background_width)
-        else:
+        elif background_type == 3:
             background = background_generator.picture(background_height, background_width)
+        else:
+            background = background_generator.license_plate(background_height, background_width, lpcolor)
+
 
         #############################
         # Place text with alignment #

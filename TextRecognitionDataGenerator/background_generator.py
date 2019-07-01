@@ -26,6 +26,27 @@ def plain_white(height, width):
 
     return Image.new("L", (width, height), 255).convert('RGBA')
 
+def license_plate(height, width, color):
+    """
+        Create a license plate background
+    """
+
+    const = random.randint(10, 30)
+
+    if color.lower() == 'random':
+        color = random.choice(['white', 'red', 'yellow'])
+
+    if color.lower() == 'red':
+        color_codes =  (197 - const, 46 - const, 27 - const)
+    elif color.lower() == 'white':
+        color_codes = (243 - const, 238 - const, 248 - const)
+    elif color.lower() == 'yellow':
+        color_codes = (221 - const, 171 - const, 22 - const)
+    
+    return Image.new("RGBA", (width, height), color_codes)
+    
+
+
 def quasicrystal(height, width):
     """
         Create a background with quasicrystal (https://en.wikipedia.org/wiki/Quasicrystal)

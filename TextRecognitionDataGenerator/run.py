@@ -165,8 +165,15 @@ def parse_arguments():
         "--background",
         type=int,
         nargs="?",
-        help="Define what kind of background to use. 0: Gaussian Noise, 1: Plain white, 2: Quasicrystal, 3: Pictures",
+        help="Define what kind of background to use. 0: Gaussian Noise, 1: Plain white, 2: Quasicrystal, 3: Pictures, 4: License plate",
         default=0,
+    )
+    parser.add_argument(
+        "-lpc",
+        "--lp_color",
+        type=str,
+        help="Set license plate background color. red: RED, white: WHITE, yellow: YELLOW, random: RANDOM",
+        default='random'
     )
     parser.add_argument(
         "-hw",
@@ -243,7 +250,7 @@ def parse_arguments():
         type=margins,
         nargs="?",
         help="Define the margins around the text when rendered. In pixels, TOP/RIGHT/BOTTOM/LEFT",
-        default=(20, 45, 5, 45)
+        default=(20, 10, 5, 10)
     )
     parser.add_argument(
         "-fi",
@@ -343,7 +350,8 @@ def main():
             [args.orientation] * string_count,
             [args.space_width] * string_count,
             [args.margins] * string_count,
-            [args.fit] * string_count
+            [args.fit] * string_count,
+            [args.lp_color] * string_count
         )
     ), total=args.count):
         pass
